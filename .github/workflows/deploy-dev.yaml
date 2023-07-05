@@ -32,13 +32,29 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
 
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: usr
+          POSTGRES_PASSWORD: pass
+
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup
         run: |
-          docker run --env=POSTGRES_PASSWORD=pass --env=POSTGRES_USER=usr postgres:14
           export OPALIZERENV="test"
           export OPALIZER_DB__HOST="127.0.0.1"
           export OPALIZER_DB__NAME="opal"
