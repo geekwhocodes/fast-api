@@ -71,8 +71,8 @@ jobs:
           poetry run pytest
         env:
           OPALIZERENV : "test"
-          OPALIZER_DB__HOST : "localhost"
-          OPALIZER_DB__NAME : "postres"
+          OPALIZER_DB__HOST : "postgres"
+          OPALIZER_DB__NAME : "opal"
           OPALIZER_GMAPS_KEY : "test"
           OPALIZER_DB__USERNAME : "usr"
           OPALIZER_DB__PASSWORD : "pass"
