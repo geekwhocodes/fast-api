@@ -1,0 +1,11 @@
+[default]
+gmaps_key=""
+
+[app]
+name = "Opalizer"
+version="0.1.0"
+
+
+[default.db]
+port = 5432
+echo = false

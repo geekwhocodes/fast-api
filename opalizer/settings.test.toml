@@ -1,0 +1,17 @@
+[test]
+dynaconf_merge = true
+
+[test.app]
+name =  "Opal test"
+
+[test.server]
+log_level = "debug"
+reload = true
+cors_origins = ["http://localhost:3000", "http://localhost:4200"]
+
+[test.db]
+username = "usr"
+password = "pass"
+host = "opal_db"
+name = "opal_test"
+echo = true
