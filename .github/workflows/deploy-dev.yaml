@@ -49,7 +49,10 @@ jobs:
       - name: Install Docker Slim
         id: install-docker-slim
         run: |
-          curl -sL https://raw.githubusercontent.com/slimtoolkit/slim/master/scripts/install-slim.sh | sudo bash -
+          curl -L -o ds.tar.gz https://downloads.dockerslim.com/releases/1.40.2/dist_linux.tar.gz
+          ls
+          mkdir /usr/local/bin/docker-slim
+          tar xvzf ds.tar.gz -C /usr/local/bin/docker-slim
           echo $(docker-slim --version)
 
       - name: Build, tag, and push image to Amazon ECR
