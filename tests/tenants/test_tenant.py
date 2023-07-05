@@ -11,7 +11,6 @@ from opalizer.config import settings
 auth_str = base64.b64encode(f"{settings.admin.username}:{settings.admin.password}".encode("utf-8"))
 auth_headers = {"Authorization" : f"Basic {auth_str.decode('utf-8')}"}
 
-@pytest.mark.tenant
 @pytest.mark.asyncio
 async def test_tenants_get_all(client: TestClient):
     client.headers = auth_headers
@@ -21,7 +20,6 @@ async def test_tenants_get_all(client: TestClient):
     assert resp.get("status") == "success"
     assert isinstance(resp.get("value"), list)
 
-@pytest.mark.tenant
 @pytest.mark.asyncio
 async def test_tenant_create(client: TestClient):
     client.headers = auth_headers
@@ -35,7 +33,6 @@ async def test_tenant_create(client: TestClient):
     assert isinstance(result, TenantSchema)
     assert result.name == org_name
 
-@pytest.mark.tenant
 @pytest.mark.asyncio
 async def test_tenant_get_by_name(client: TestClient):
     client.headers = auth_headers
@@ -45,7 +42,6 @@ async def test_tenant_get_by_name(client: TestClient):
     resp = response.json()
     assert resp.get("status") == "success"
 
-@pytest.mark.tenant
 @pytest.mark.asyncio
 async def test_tenant_delete_by_name(client: TestClient):
     client.headers = auth_headers
