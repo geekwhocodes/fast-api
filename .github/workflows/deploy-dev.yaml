@@ -29,7 +29,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    environment: ${{ vars.OPALIZERENV }}
+    environment: dev
 
     steps:
       - name: Checkout
@@ -75,6 +75,7 @@ jobs:
             OPALIZER_DB__PASSWORD='${{ secrets.OPALIZER_DB__PASSWORD }}'
             OPALIZER_ADMIN__USERNAME='${{ secrets.OPALIZER_ADMIN__USERNAME }}'
             OPALIZER_ADMIN__PASSWORD='${{ secrets.OPALIZER_ADMIN__PASSWORD }}'
+        env:
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
@@ -82,4 +83,4 @@ jobs:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+          wait-for-service-stability: false
