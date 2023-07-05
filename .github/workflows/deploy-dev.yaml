@@ -50,10 +50,10 @@ jobs:
         run: poetry run ruff .
 
       - name: Format Black
-        run: black ./opalizer tests --line-length=120
+        run: poetry run black ./opalizer tests --line-length=120
       
       - name: Run Safety
-        run: safety check
+        run: poetry run safety check
 
   test:
     needs: build
