@@ -21,7 +21,7 @@ env:
   ECS_CLUSTER: dopalizer_cluster                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: .aws/task-definition.json # set this to the path to your Amazon ECS task definition
                                                  # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: dopalizer_api          # set this to the name of the container in the
+  CONTAINER_NAME: dopalizer_api           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
   OPALIZERENV: ${{ vars.OPALIZERENV }}
 
@@ -67,14 +67,15 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
           environment-variables: |
-            OPALIZERENV='${{ vars.OPALIZERENV }}'
-            OPALIZER_DB__HOST='${{ secrets.OPALIZER_DB__HOST }}'
-            OPALIZER_DB__NAME='${{ secrets.OPALIZER_DB__NAME }}'
-            OPALIZER_GMAPS_KEY='${{ secrets.OPALIZER_GMAPS_KEY }}'
-            OPALIZER_DB__USERNAME='${{ secrets.OPALIZER_DB__USERNAME }}'
-            OPALIZER_DB__PASSWORD='${{ secrets.OPALIZER_DB__PASSWORD }}'
-            OPALIZER_ADMIN__USERNAME='${{ secrets.OPALIZER_ADMIN__USERNAME }}'
-            OPALIZER_ADMIN__PASSWORD='${{ secrets.OPALIZER_ADMIN__PASSWORD }}'
+            OPALIZERENV=${{ env.OPALIZERENV }}
+            OPALIZER_DB__HOST=${{ secrets.OPALIZER_DB__HOST }}
+            OPALIZER_DB__NAME=${{ secrets.OPALIZER_DB__NAME }}
+            OPALIZER_GMAPS_KEY=${{ secrets.OPALIZER_GMAPS_KEY }}
+            OPALIZER_DB__USERNAME=${{ secrets.OPALIZER_DB__USERNAME }}
+            OPALIZER_DB__PASSWORD=${{ secrets.OPALIZER_DB__PASSWORD }}
+            OPALIZER_ADMIN__USERNAME=${{ secrets.OPALIZER_ADMIN__USERNAME }}
+            OPALIZER_ADMIN__PASSWORD=${{ secrets.OPALIZER_ADMIN__PASSWORD }}
+
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
