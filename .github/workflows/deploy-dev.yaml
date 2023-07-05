@@ -1,18 +1,14 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
 
-# GitHub recommends pinning actions to a commit SHA.
-# To get a newer version, you will need to update the SHA.
-# You can also reference a tag or branch, but the action may change without warning.
 
-name: Deploy to Amazon ECS
+name: Deploy
 
 on:
   push:
     branches:
       - dev
+  pull_request:
+    branches:
+      - main
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}                   # set this to your preferred AWS region, e.g. us-west-1
@@ -27,8 +23,41 @@ env:
 
 jobs:
 
-  deploy:
-    name: Deploy
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    environment: dev
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: |
+          pipx install poetry==1.5.1
+          pip install flake8 pytest pytest-cov
+      # set-up python with cache
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      # install requirements (including dev dependencies)
+      - name: Install requirements
+        run: poetry install
+      
+      - name: Run Lint
+        run: poetry run ruff .
+
+      - name: Format Black
+        run: black ./opalizer tests --line-length=120
+      
+      - name: Run Safety
+        run: safety check
+
+  test:
+    needs: build
+    name: Test
     runs-on: ubuntu-latest
     environment: dev
 
@@ -88,7 +117,17 @@ jobs:
           title: Coverage Report
           pytest-coverage-path: pytest-coverage.txt
           junitxml-path: pytest.xml
-      
+
+  deploy:
+    needs: test
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@0e613a0980cbf65ed5b322eb7a1e075d28913a83
         with:
@@ -139,7 +178,6 @@ jobs:
             OPALIZER_DB__PASSWORD='${{ secrets.OPALIZER_DB__PASSWORD }}'
             OPALIZER_ADMIN__USERNAME='${{ secrets.OPALIZER_ADMIN__USERNAME }}'
             OPALIZER_ADMIN__PASSWORD='${{ secrets.OPALIZER_ADMIN__PASSWORD }}'
-            EXTRA=extra
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
@@ -147,5 +185,5 @@ jobs:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
-          force-new-deployment: true
+          force-new-deployment: false
           wait-for-service-stability: true
