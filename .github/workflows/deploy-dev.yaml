@@ -68,6 +68,7 @@ jobs:
       # run unit tests
       - name: Run unit-tests
         run: |
+          set -o pipefail
           poetry run pytest
         env:
           OPALIZERENV : "test"
