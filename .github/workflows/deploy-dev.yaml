@@ -86,7 +86,6 @@ jobs:
         uses: MishaKav/pytest-coverage-comment@main
         with:
           title: Coverage Report
-          pytest-coverage-path: pytest-coverage.txt
           junitxml-path: pytest.xml
       
       - name: Configure AWS credentials
