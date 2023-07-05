@@ -67,7 +67,8 @@ jobs:
         run: poetry install
       # run unit tests
       - name: Run unit-tests
-        run: poetry run pytest --cov . -n 2
+        run: |
+          poetry run pytest
         env:
           OPALIZERENV : "test"
           OPALIZER_DB__HOST : "localhost"
