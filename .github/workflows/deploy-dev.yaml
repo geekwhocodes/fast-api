@@ -46,13 +46,6 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
 
-      - name: Install Docker Slim
-        id: install-docker-slim
-        run: |
-          curl -L -o ds.tar.gz https://downloads.dockerslim.com/releases/1.40.2/dist_linux.tar.gz
-          tar xvzf dist_linux.tar.gz -C /usr/local/bin/docker-slim
-          echo $(docker-slim --version)
-
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
@@ -63,7 +56,6 @@ jobs:
           # push it to ECR so that it can
           # be deployed to ECS.
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker-slim build --target $(IMAGE_TAG) --tag $(IMAGE_TAG)-slim --env "OPALIZERENV=dev" --env "OPALIZER_GMAPS_KEY=es"
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
