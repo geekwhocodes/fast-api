@@ -81,7 +81,7 @@ jobs:
           OPALIZER_ADMIN__PASSWORD : "pass"
       # add pytest coverage report to PR
       - name: Pytest coverage comment
-        #if: ${{ success() && github.event_name == 'pull_request' }}
+        if: ${{ success() && github.event_name == 'pull_request' }}
         id: coverageComment
         uses: MishaKav/pytest-coverage-comment@main
         with:
