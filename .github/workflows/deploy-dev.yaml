@@ -26,39 +26,6 @@ env:
   OPALIZERENV: ${{ vars.OPALIZERENV }}
 
 jobs:
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    environment: dev
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup
-      run: |
-        docker run --env=POSTGRES_PASSWORD=pass --env=POSTGRES_USER=usr
-        export OPALIZERENV="test"
-        export OPALIZER_DB__HOST="127.0.0.1"
-        export OPALIZER_DB__NAME="opal"
-        export OPALIZER_GMAPS_KEY="test"
-        export OPALIZER_DB__USERNAME="usr"
-        export OPALIZER_DB__PASSWORD="pass"
-        export OPALIZER_ADMIN__USERNAME="admin"
-        export OPALIZER_ADMIN__PASSWORD="pass"
-      
-      uses: actions/setup-python@v4
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
-      
-      -name: Check Poerty
-        run: | 
-          poetry --version
-
-
-
-
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
