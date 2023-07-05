@@ -118,7 +118,7 @@ jobs:
           title: Coverage Report
           pytest-coverage-path: pytest-coverage.txt
           junitxml-path: pytest.xml
-          github-token: ${{ secrets.CODE_COMM }}
+          github-token: ${{ secrets.CODE_COMMC }}
 
   deploy:
     needs: test
