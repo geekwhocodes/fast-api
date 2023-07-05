@@ -74,7 +74,7 @@ jobs:
           cache: 'poetry'
       # install requirements (including dev dependencies)
       - name: Install requirements
-        run: poetry install --with test
+        run: poetry install
       # run unit tests
       - name: Run unit-tests
         run: |
