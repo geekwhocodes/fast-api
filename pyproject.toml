@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "opalizer"
+name = "fast-api"
 version = "0.1.0"
 description = ""
-authors = ["Ganesh Raskar <ganeshraskar@outlook.com>"]
+authors = ["geekwhocodes <ganeshraskar@outlook.com>"]
 readme = "README.md"
-packages = [{include = "opalizer", from = "opalizer"}]
+packages = []
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -84,3 +84,4 @@ ignore = [
 
 [tool.ruff.isort]
 known-third-party = ["fastapi", "pydantic", "starlette"]
+
