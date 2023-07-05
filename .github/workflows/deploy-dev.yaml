@@ -53,17 +53,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup
-        run: |
-          export OPALIZERENV="test"
-          export OPALIZER_DB__HOST="127.0.0.1"
-          export OPALIZER_DB__NAME="opal"
-          export OPALIZER_GMAPS_KEY="test"
-          export OPALIZER_DB__USERNAME="usr"
-          export OPALIZER_DB__PASSWORD="pass"
-          export OPALIZER_ADMIN__USERNAME="admin"
-          export OPALIZER_ADMIN__PASSWORD="pass"
-      
       - name: Install poetry
         run: pipx install poetry==1.5.1
       # set-up python with cache
@@ -80,6 +69,15 @@ jobs:
         run: |
           set -o pipefail
           poetry run pytest
+        env:
+          OPALIZERENV : "test"
+          OPALIZER_DB__HOST : "127.0.0.1"
+          OPALIZER_DB__NAME : "opal"
+          OPALIZER_GMAPS_KEY : "test"
+          OPALIZER_DB__USERNAME : "usr"
+          OPALIZER_DB__PASSWORD : "pass"
+          OPALIZER_ADMIN__USERNAME : "admin"
+          OPALIZER_ADMIN__PASSWORD : "pass"
       # add pytest coverage report to PR
       - name: Pytest coverage comment
         #if: ${{ success() && github.event_name == 'pull_request' }}
