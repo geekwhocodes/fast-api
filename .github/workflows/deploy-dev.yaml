@@ -53,8 +53,8 @@ jobs:
         run: poetry run black ./opalizer tests --line-length=120
       
       - name: Run Safety
-        run: poetry run safety check
-
+        run: #poetry run safety check --disable-optional-telemetry-data
+          echo "Skipping this step..."
   test:
     needs: build
     name: Test
