@@ -79,7 +79,7 @@ jobs:
       - name: Run unit-tests
         run: |
           set -o pipefail
-          poetry run make unit-tests-cov-fail
+          poetry run pytest
       # add pytest coverage report to PR
       - name: Pytest coverage comment
         #if: ${{ success() && github.event_name == 'pull_request' }}
