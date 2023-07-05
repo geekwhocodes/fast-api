@@ -50,8 +50,6 @@ jobs:
         id: install-docker-slim
         run: |
           curl -L -o ds.tar.gz https://downloads.dockerslim.com/releases/1.40.2/dist_linux.tar.gz
-          ls
-          mkdir /usr/local/bin/docker-slim
           tar xvzf ds.tar.gz -C /usr/local/bin/docker-slim
           echo $(docker-slim --version)
 
