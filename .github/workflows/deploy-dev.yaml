@@ -65,7 +65,7 @@ jobs:
           export OPALIZER_ADMIN__PASSWORD="pass"
       
       - name: Install poetry
-        run: pipx install poetry==1.5.1
+        run: pipx install poetry==1.2.0
       # set-up python with cache
       - name: Setup Python 3.10
         uses: actions/setup-python@v4
