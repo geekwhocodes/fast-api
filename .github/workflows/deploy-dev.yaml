@@ -17,14 +17,13 @@ env:
                                                  # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: dopalizer_api          # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
-  OPALIZERENV: ${{ github.event.inputs.environment }}
 
 jobs:
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    environment: ${{ env.OPALIZERENV }}
+    environment: ${{ github.event.inputs.environment }}
   
     steps:
       - name: Checkout
@@ -122,7 +121,7 @@ jobs:
     needs: test
     name: Deploy
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
       - name: Checkout
