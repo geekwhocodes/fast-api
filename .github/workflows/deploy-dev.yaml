@@ -170,7 +170,7 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
           environment-variables: |
-            OPALIZERENV='${{ env.OPALIZERENV }}'
+            OPALIZERENV='${{ github.event.inputs.environment }}'
             OPALIZER_DB__HOST='${{ secrets.OPALIZER_DB__HOST }}'
             OPALIZER_DB__NAME='${{ secrets.OPALIZER_DB__NAME }}'
             OPALIZER_GMAPS_KEY='${{ secrets.OPALIZER_GMAPS_KEY }}'
