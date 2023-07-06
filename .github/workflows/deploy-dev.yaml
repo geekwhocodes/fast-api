@@ -8,6 +8,9 @@ on:
       environment:
         description: "environment name [dev, test, prod]"
         default: "dev"
+      version:
+        description: "version [follow semver]"
+
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}                   # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}           # set this to your Amazon ECR repository name
@@ -146,7 +149,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.event.inputs.version }}
         run: |
           # curl -sL https://raw.githubusercontent.com/slimtoolkit/slim/master/scripts/install-slim.sh | sudo bash -
           # docker-slim -v
