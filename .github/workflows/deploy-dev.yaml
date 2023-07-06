@@ -3,13 +3,11 @@
 name: Deploy
 
 on:
-  push:
-    branches:
-      - dev
-  pull_request:
-    branches:
-      - main
-
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "environment name [dev, test, prod]"
+        default: "dev"
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}                   # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}           # set this to your Amazon ECR repository name
@@ -19,14 +17,14 @@ env:
                                                  # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: dopalizer_api          # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
-  OPALIZERENV: ${{ vars.OPALIZERENV }}
+  OPALIZERENV: ${{ github.event.inputs.environment }}
 
 jobs:
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ env.OPALIZERENV }}
   
     steps:
       - name: Checkout
@@ -172,7 +170,7 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
           environment-variables: |
-            OPALIZERENV='${{ vars.OPALIZERENV }}'
+            OPALIZERENV='${{ env.OPALIZERENV }}'
             OPALIZER_DB__HOST='${{ secrets.OPALIZER_DB__HOST }}'
             OPALIZER_DB__NAME='${{ secrets.OPALIZER_DB__NAME }}'
             OPALIZER_GMAPS_KEY='${{ secrets.OPALIZER_GMAPS_KEY }}'

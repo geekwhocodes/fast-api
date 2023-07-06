@@ -1,0 +1,109 @@
+
+
+name: Tests
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: |
+          pipx install poetry==1.5.1
+          pip install flake8 pytest pytest-cov
+      # set-up python with cache
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      # install requirements (including dev dependencies)
+      - name: Install requirements
+        run: poetry install
+      
+      - name: Run Lint
+        run: poetry run ruff .
+
+      # Replace with https://black.readthedocs.io/en/stable/integrations/github_actions.html
+      - name: Format Black
+        run: poetry run black ./opalizer tests --line-length=120
+      
+      - name: Run Safety
+        run: #poetry run safety check --disable-optional-telemetry-data
+          echo "Skipping this step..."
+  test:
+    needs: build
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: usr
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: |
+          pipx install poetry==1.5.1
+          pip install flake8 pytest pytest-cov
+      # set-up python with cache
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      # install requirements (including dev dependencies)
+      - name: Install requirements
+        run: poetry install
+      # run unit tests
+      - name: Run unit-tests
+        run: poetry run pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=opalizer tests/ | tee pytest-coverage.txt
+        env:
+          OPALIZERENV : "test"
+          OPALIZER_DB__HOST : "localhost"
+          OPALIZER_DB__NAME : "postgres"
+          OPALIZER_GMAPS_KEY : "test"
+          OPALIZER_DB__USERNAME : "usr"
+          OPALIZER_DB__PASSWORD : "pass"
+          OPALIZER_ADMIN__USERNAME : "admin"
+          OPALIZER_ADMIN__PASSWORD : "pass"
+      # add pytest coverage report to PR
+      - name: Pytest coverage comment
+        if: ${{ success() && github.event_name == 'pull_request' }}
+        id: coverageComment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          title: Coverage Report
+          pytest-coverage-path: pytest-coverage.txt
+          junitxml-path: pytest.xml
+          github-token: ${{ secrets.CODE_COMMC }}
