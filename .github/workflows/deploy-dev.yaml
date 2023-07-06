@@ -1,0 +1,189 @@
+
+
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "environment name [dev, test, prod]"
+        default: "dev"
+      version:
+        description: "version [follow semver]"
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}                   # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}           # set this to your Amazon ECR repository name
+  ECS_SERVICE: ${{ vars.ECS_SERVICE_NAME }}                 # set this to your Amazon ECS service name
+  ECS_CLUSTER: dopalizer_cluster                 # set this to your Amazon ECS cluster name
+  ECS_TASK_DEFINITION: .aws/task-definition.json # set this to the path to your Amazon ECS task definition
+                                                 # file, e.g. .aws/task-definition.json
+  CONTAINER_NAME: dopalizer_api          # set this to the name of the container in the
+                                               # containerDefinitions section of your task definition
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: |
+          pipx install poetry==1.5.1
+          pip install flake8 pytest pytest-cov
+      # set-up python with cache
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      # install requirements (including dev dependencies)
+      - name: Install requirements
+        run: poetry install
+      
+      - name: Run Lint
+        run: poetry run ruff .
+
+      # Replace with https://black.readthedocs.io/en/stable/integrations/github_actions.html
+      - name: Format Black
+        run: poetry run black ./opalizer tests --line-length=120
+      
+      - name: Run Safety
+        run: #poetry run safety check --disable-optional-telemetry-data
+          echo "Skipping this step..."
+  test:
+    needs: build
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: usr
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: |
+          pipx install poetry==1.5.1
+          pip install flake8 pytest pytest-cov
+      # set-up python with cache
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      # install requirements (including dev dependencies)
+      - name: Install requirements
+        run: poetry install
+      # run unit tests
+      - name: Run unit-tests
+        run: poetry run pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=opalizer tests/ | tee pytest-coverage.txt
+        env:
+          OPALIZERENV : "test"
+          OPALIZER_DB__HOST : "localhost"
+          OPALIZER_DB__NAME : "postgres"
+          OPALIZER_GMAPS_KEY : "test"
+          OPALIZER_DB__USERNAME : "usr"
+          OPALIZER_DB__PASSWORD : "pass"
+          OPALIZER_ADMIN__USERNAME : "admin"
+          OPALIZER_ADMIN__PASSWORD : "pass"
+      # add pytest coverage report to PR
+      - name: Pytest coverage comment
+        if: ${{ success() && github.event_name == 'pull_request' }}
+        id: coverageComment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          title: Coverage Report
+          pytest-coverage-path: pytest-coverage.txt
+          junitxml-path: pytest.xml
+          github-token: ${{ secrets.CODE_COMMC }}
+
+  deploy:
+    needs: test
+    name: Deploy - ${{ github.event.inputs.environment }} - ${{ github.event.inputs.version }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@0e613a0980cbf65ed5b322eb7a1e075d28913a83
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
+
+      - name: Install Docker Slim
+        id: install-docker-slim
+        run: |
+          curl -sL https://raw.githubusercontent.com/slimtoolkit/slim/master/scripts/install-slim.sh | sudo bash -
+          slim -v
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.inputs.version }}
+        run: |
+          # curl -sL https://raw.githubusercontent.com/slimtoolkit/slim/master/scripts/install-slim.sh | sudo bash -
+          # docker-slim -v
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          slim build --target $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG-slim --env "OPALIZERENV=dev" --env "OPALIZER_GMAPS_KEY=es"
+          # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG-slim
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG-slim" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            OPALIZERENV='${{ github.event.inputs.environment }}'
+            OPALIZER_DB__HOST='${{ secrets.OPALIZER_DB__HOST }}'
+            OPALIZER_DB__NAME='${{ secrets.OPALIZER_DB__NAME }}'
+            OPALIZER_GMAPS_KEY='${{ secrets.OPALIZER_GMAPS_KEY }}'
+            OPALIZER_DB__USERNAME='${{ secrets.OPALIZER_DB__USERNAME }}'
+            OPALIZER_DB__PASSWORD='${{ secrets.OPALIZER_DB__PASSWORD }}'
+            OPALIZER_ADMIN__USERNAME='${{ secrets.OPALIZER_ADMIN__USERNAME }}'
+            OPALIZER_ADMIN__PASSWORD='${{ secrets.OPALIZER_ADMIN__PASSWORD }}'
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          force-new-deployment: true
+          wait-for-service-stability: true
