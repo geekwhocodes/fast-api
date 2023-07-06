@@ -120,7 +120,7 @@ jobs:
 
   deploy:
     needs: test
-    name: Deploy
+    name: Deploy - ${{ github.event.inputs.environment }} - ${{ github.event.inputs.version }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
 
